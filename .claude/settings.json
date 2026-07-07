@@ -1,0 +1,51 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -Path \"c:\\\\xampp\\\\htdocs\\\\PlanningDie\" -Recurse -File | Where-Object { $_.Extension -in '.php', '.js', '.html' } | Select-Object -ExpandProperty FullName | Sort-Object)",
+      "Read(//c/xampp/htdocs/**)",
+      "PowerShell(Get-Command php -ErrorAction SilentlyContinue)",
+      "Read(//c/xampp/**)",
+      "PowerShell(& \"C:\\\\xampp\\\\php\\\\php.exe\" -r \"echo PHP_VERSION;\" 2>&1)",
+      "PowerShell($composerPaths = @\\(\"C:\\\\xampp\\\\php\\\\composer.phar\",\"C:\\\\ProgramData\\\\ComposerSetup\\\\bin\\\\composer.bat\",\"C:\\\\Users\\\\boonsong.ch\\\\AppData\\\\Roaming\\\\Composer\\\\vendor\\\\bin\\\\composer\",\"C:\\\\composer\\\\composer.phar\"\\); foreach\\($p in $composerPaths\\){ if\\(Test-Path $p\\){ Write-Output \"Found: $p\" } })",
+      "PowerShell(Head -10)",
+      "PowerShell(& \"C:\\\\xampp\\\\php\\\\php.exe\" -r \"var_dump\\(extension_loaded\\('gd'\\), extension_loaded\\('zip'\\), extension_loaded\\('mbstring'\\)\\);\")",
+      "PowerShell(& \"C:\\\\xampp\\\\php\\\\php.exe\" -r \"var_dump\\(extension_loaded\\('gd'\\)\\);\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\xampp\\\\htdocs\\\\PlanningDie\" -Recurse -Force)",
+      "Bash(Select-Object -Property FullName, PSIsContainer)",
+      "Bash(Sort-Object FullName)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(php -l \"c:\\\\xampp\\\\htdocs\\\\PlanningDie\\\\pages\\\\dmk_plan.php\")",
+      "Bash(php -l \"c:\\\\xampp\\\\htdocs\\\\PlanningDie\\\\pages\\\\planning.php\")",
+      "Bash(php -l \"c:\\\\xampp\\\\htdocs\\\\PlanningDie\\\\api\\\\upload_die_image.php\")",
+      "PowerShell(& \"C:\\\\xampp\\\\php\\\\php.exe\" -l \"C:\\\\xampp\\\\htdocs\\\\PlanningDie\\\\pages\\\\dmk_plan.php\")",
+      "PowerShell(& \"C:\\\\xampp\\\\php\\\\php.exe\" -l \"C:\\\\xampp\\\\htdocs\\\\PlanningDie\\\\pages\\\\planning.php\")",
+      "PowerShell(& \"C:\\\\xampp\\\\php\\\\php.exe\" -l \"C:\\\\xampp\\\\htdocs\\\\PlanningDie\\\\api\\\\upload_die_image.php\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\xampp\\\\htdocs\\\\PlanningDie\\\\pages\" -Filter \"*.php\")",
+      "Bash(Select-Object Name)",
+      "Bash(Get-ChildItem -Path \"c:\\\\xampp\\\\htdocs\\\\PlanningDie\" -Recurse -Filter \"*.js\")",
+      "Bash(Select-Object FullName)",
+      "Bash(Get-ChildItem -Path \"c:\\\\xampp\\\\htdocs\\\\PlanningDie\\\\pages\" -Filter \"*.php\" -ErrorAction SilentlyContinue)",
+      "Bash(dir \"c:\\\\xampp\\\\htdocs\\\\PlanningDie\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\xampp\\\\htdocs\\\\PlanningDie\" -Force)",
+      "Bash(Select-Object -Property Mode, Name)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\xampp\\\\htdocs\\\\PlanningDie\" | ForEach-Object { $_.FullName })",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\xampp\\\\htdocs\\\\PlanningDie\\\\pages\" -Recurse | ForEach-Object { $_.FullName })",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\xampp\\\\htdocs\\\\PlanningDie\\\\api\" -Recurse | ForEach-Object { $_.FullName })",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\xampp\\\\htdocs\\\\PlanningDie\\\\db\" -Recurse | ForEach-Object { $_.FullName } ; \"`n---`n\" ; Get-ChildItem -Path \"c:\\\\xampp\\\\htdocs\\\\PlanningDie\\\\includes\" -Recurse | ForEach-Object { $_.FullName })",
+      "Bash(curl -s \"http://almdc.alumetgroup.com/alm/api/v1/alm_getDiemagStatus/\")",
+      "Bash(curl -sv \"http://almdc.alumetgroup.com/alm/api/v1/alm_getDiemagStatus/\")",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://almdc.alumetgroup.com/alm/api/v1/alm_getDiemagStatus/\" -TimeoutSec 10 -UseBasicParsing; $r.Content } catch { $_.Exception.Message })",
+      "Bash(php -r ' *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\xampp\\\\htdocs\\\\PlanningDie\" -Recurse -Force)",
+      "Bash(Get-ChildItem -Path \"c:\\\\xampp\\\\htdocs\\\\PlanningDie\" -MaxDepth 1 -Force)",
+      "Bash(Get-ChildItem -Path \"c:\\\\xampp\\\\htdocs\\\\PlanningDie\\\\api\" -Force -ErrorAction SilentlyContinue)",
+      "Bash(Get-ChildItem -Path \"c:\\\\xampp\\\\htdocs\\\\PlanningDie\\\\api\" -Filter \"*.php\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\xampp\\\\htdocs\\\\PlanningDie\\\\db\")",
+      "Bash(dir /s /b *.php)",
+      "Bash(findstr /v vendor)"
+    ],
+    "additionalDirectories": [
+      "C:\\xampp\\php"
+    ]
+  }
+}

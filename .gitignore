@@ -1,0 +1,39 @@
+# Dependencies — excluded from git (run "composer install --no-dev" on server)
+# หรือถ้าต้องการ deploy ง่ายๆ ให้ comment บรรทัดนี้ออก แล้ว git add vendor/
+/vendor/
+
+# Database
+/db/*.db
+/db/*.sqlite
+/db/*.sqlite3
+
+# Uploaded files
+/uploads/
+
+# Environment & config secrets
+.env
+.env.local
+config.local.php
+
+# Composer lock (optional: commit this if you want reproducible installs)
+# composer.lock
+
+# PHP error logs
+*.log
+error_log
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / editor
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Temporary / export files
+/exports/
+*.tmp
+*.temp

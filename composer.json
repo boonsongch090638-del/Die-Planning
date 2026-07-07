@@ -1,0 +1,16 @@
+{
+    "name": "die-planning/app",
+    "description": "Die Planning System for Aluminum Extrusion Die Manufacturing",
+    "type": "project",
+    "require": {
+        "php": ">=8.1",
+        "phpoffice/phpspreadsheet": "^2.1"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {}
+    }
+}

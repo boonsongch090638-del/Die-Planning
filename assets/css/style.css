@@ -1,0 +1,250 @@
+/* ============================================================
+   Die Planning — Global Styles
+   Primary: #1a5276  |  Secondary: #2980b9
+   ============================================================ */
+
+/* ── Base ──────────────────────────────────────────────────── */
+html, body {
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    background-color: #f0f4f8;
+    font-size: 0.875rem;
+    color: #212529;
+}
+
+main {
+    flex: 1;
+}
+
+/* ── Navbar ────────────────────────────────────────────────── */
+.navbar {
+    background-color: #1a5276 !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,.25);
+}
+
+.navbar-brand .bi {
+    font-size: 1.2rem;
+    color: #f4d03f;
+}
+
+.navbar .nav-link {
+    color: rgba(255,255,255,.80) !important;
+    transition: color .15s;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link.active {
+    color: #fff !important;
+}
+
+.navbar .nav-link.active {
+    border-bottom: 2px solid #f4d03f;
+}
+
+/* ── Dashboard cards ───────────────────────────────────────── */
+.stat-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.08);
+    transition: transform .18s, box-shadow .18s;
+    cursor: default;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0,0,0,.12);
+}
+
+.stat-card .stat-icon {
+    font-size: 2.4rem;
+    opacity: .85;
+}
+
+.stat-card .stat-number {
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.stat-card .stat-label {
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    opacity: .75;
+}
+
+/* ── Die-type badges ───────────────────────────────────────── */
+.badge-solid    { background-color: #d4edda; color: #155724; }
+.badge-hollow   { background-color: #fff3cd; color: #856404; }
+.badge-heatsink { background-color: #cce5ff; color: #004085; }
+
+/* ── Plan-status row highlights ────────────────────────────── */
+.badge-normal   { background-color: #198754; color: #fff; }
+.badge-waiting  { background-color: #ffc107; color: #000; }
+.badge-hold     { background-color: #dc3545; color: #fff; }
+
+tr.status-waiting td { background-color: #fff8e1 !important; }
+tr.status-hold    td { background-color: #fdecea !important; }
+
+/* ── Sticky table header ───────────────────────────────────── */
+.table-sticky thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #1a5276 !important;
+    color: #fff;
+    white-space: nowrap;
+    box-shadow: 0 1px 0 rgba(0,0,0,.2);
+}
+
+.table th { white-space: nowrap; vertical-align: middle; }
+.table td { vertical-align: middle; }
+
+/* ── Responsive table scroll on mobile ────────────────────── */
+.table-responsive-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+}
+
+@media (max-width: 767.98px) {
+    .table-responsive-wrapper table {
+        min-width: 900px;
+    }
+
+    .hide-mobile { display: none !important; }
+}
+
+/* ── Loading spinner overlay ───────────────────────────────── */
+#loadingOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(255,255,255,.65);
+    z-index: 9000;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: .75rem;
+}
+
+#loadingOverlay.show {
+    display: flex;
+}
+
+#loadingOverlay .spinner-border {
+    width: 3rem;
+    height: 3rem;
+    border-width: .3rem;
+    color: #1a5276;
+}
+
+#loadingOverlay .loading-text {
+    color: #1a5276;
+    font-weight: 600;
+    font-size: .9rem;
+}
+
+/* ── Toast (bottom-right) ──────────────────────────────────── */
+#toastWrap {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+}
+
+/* ── Image thumbnail hover zoom ────────────────────────────── */
+.die-thumb {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+    cursor: zoom-in;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.die-thumb:hover {
+    transform: scale(2.5);
+    box-shadow: 0 4px 16px rgba(0,0,0,.25);
+    z-index: 100;
+    position: relative;
+    border-color: #2980b9;
+}
+
+/* ── Buttons — primary accent ──────────────────────────────── */
+.btn-primary {
+    background-color: #2980b9;
+    border-color: #2980b9;
+}
+
+.btn-primary:hover {
+    background-color: #1a5276;
+    border-color: #1a5276;
+}
+
+.btn-outline-primary {
+    color: #2980b9;
+    border-color: #2980b9;
+}
+
+.btn-outline-primary:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+}
+
+/* ── Footer ────────────────────────────────────────────────── */
+.footer {
+    border-top: 1px solid #1a5276;
+    background-color: #1a5276 !important;
+}
+
+/* ── Print styles ───────────────────────────────────────────── */
+@media print {
+    .navbar,
+    .footer,
+    .toolbar-row,
+    .btn,
+    #toastWrap,
+    .modal,
+    .no-print {
+        display: none !important;
+    }
+
+    body {
+        background: #fff;
+        font-size: 11px;
+    }
+
+    .table-sticky thead th {
+        background-color: #1a5276 !important;
+        color: #fff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    tr.status-waiting td {
+        background-color: #fff8e1 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    tr.status-hold td {
+        background-color: #fdecea !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .table-responsive-wrapper {
+        overflow: visible;
+        box-shadow: none;
+    }
+}
