@@ -58,8 +58,11 @@ try {
         $apiImageUrl = getSectionProfileImageUrl($section);
 
         if ($apiImageUrl) {
-            $die['images']       = [$apiImageUrl];
-            $die['image_path']   = $apiImageUrl;
+            // Proxied same-origin URL — the API's own URL is HTTP-only and
+            // gets blocked as mixed content when this page is served over HTTPS.
+            $proxyUrl = BASE_URL . '/api/section_image.php?section=' . rawurlencode($section);
+            $die['images']       = [$proxyUrl];
+            $die['image_path']   = $proxyUrl;
             $die['image_source'] = 'api';
         } else {
             $localImages = findImageUrlsForDie($techDwgNo, $section);

@@ -81,6 +81,60 @@ function fetchSectionApiJson(string $url): ?array {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// Section profile image cache — the external host serves images over
+// plain HTTP, which HTTPS pages (production) block as mixed content.
+// api/section_image.php fetches them server-side and serves same-origin;
+// these helpers back that proxy with a per-section disk cache so repeat
+// loads are fast and the page still works if the external host is down.
+// ─────────────────────────────────────────────────────────────────
+
+const SECTION_IMG_CACHE_DIR = __DIR__ . '/../uploads/section_cache';
+const SECTION_IMG_CACHE_TTL = 3600; // seconds — re-check the API this often
+
+/** Disk-cache path for a section's proxied profile image (extension-less; MIME is re-detected on read). */
+function sectionImageCachePath(string $sectionCode): string {
+    $key = preg_replace('/[^A-Za-z0-9_-]/', '_', $sectionCode);
+    return SECTION_IMG_CACHE_DIR . '/' . $key . '.img';
+}
+
+/**
+ * Fetch the raw bytes of a remote image URL.
+ * Returns null on any network/HTTP failure.
+ */
+function fetchRemoteImageBytes(string $url): ?string {
+    if (function_exists('curl_init')) {
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL            => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_SSL_VERIFYPEER => false,
+        ]);
+        $raw      = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        return ($raw !== false && $httpCode >= 200 && $httpCode < 300) ? $raw : null;
+    }
+
+    $ctx = stream_context_create(['http' => ['timeout' => 15, 'ignore_errors' => true]]);
+    $raw = @file_get_contents($url, false, $ctx);
+    return $raw !== false ? $raw : null;
+}
+
+/** Sniff the MIME type of in-memory image bytes (for setting the proxy's Content-Type). */
+function detectImageMime(string $bytes): string {
+    if (function_exists('finfo_open')) {
+        $fi   = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_buffer($fi, $bytes);
+        finfo_close($fi);
+        if ($mime) return $mime;
+    }
+    return 'application/octet-stream';
+}
+
+// ─────────────────────────────────────────────────────────────────
 // Per-request caches — built once, reused for every die in the loop
 // ─────────────────────────────────────────────────────────────────
 
