@@ -18,7 +18,50 @@ requireAdminApi();
 
 const SINGLE_MAX_BYTES  = 10 * 1024 * 1024;
 const SINGLE_ALLOWED_MIMES = ['image/jpeg','image/jpg','image/png','image/gif','image/webp','image/bmp'];
-const SINGLE_ALLOWED_EXTS  = ['jpg','jpeg','png','gif','webp','bmp'];
+
+// Manually-added images are reference thumbnails only — re-encode to a
+// small JPEG so ad-hoc uploads don't grow disk usage unbounded.
+const UPLOAD_MAX_DIM       = 800;
+const UPLOAD_JPEG_QUALITY  = 78;
+
+/**
+ * Resize (down only) and re-encode an uploaded image as JPEG to keep
+ * on-disk size small. Falls back to copying the original file untouched
+ * if GD isn't available or the source can't be decoded.
+ */
+function compressAndSaveImage(string $srcPath, string $mime, string $destPath): bool {
+    if (!extension_loaded('gd')) {
+        return copy($srcPath, $destPath);
+    }
+
+    $img = match ($mime) {
+        'image/jpeg', 'image/jpg' => @imagecreatefromjpeg($srcPath),
+        'image/png'               => @imagecreatefrompng($srcPath),
+        'image/gif'                => @imagecreatefromgif($srcPath),
+        'image/webp'                => function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($srcPath) : false,
+        'image/bmp'                  => function_exists('imagecreatefrombmp') ? @imagecreatefrombmp($srcPath) : false,
+        default                        => false,
+    };
+    if (!$img) {
+        return copy($srcPath, $destPath);
+    }
+
+    $srcW  = imagesx($img);
+    $srcH  = imagesy($img);
+    $scale = min(1, UPLOAD_MAX_DIM / max($srcW, $srcH));
+    $dstW  = max(1, (int) round($srcW * $scale));
+    $dstH  = max(1, (int) round($srcH * $scale));
+
+    $dst = imagecreatetruecolor($dstW, $dstH);
+    imagefill($dst, 0, 0, imagecolorallocate($dst, 255, 255, 255));
+    imagecopyresampled($dst, $img, 0, 0, 0, 0, $dstW, $dstH, $srcW, $srcH);
+
+    $ok = imagejpeg($dst, $destPath, UPLOAD_JPEG_QUALITY);
+
+    imagedestroy($img);
+    imagedestroy($dst);
+    return $ok;
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -74,9 +117,9 @@ if (!in_array($mime, SINGLE_ALLOWED_MIMES, true)) {
     echo json_encode(['error' => "Invalid file type ({$mime})"]); exit;
 }
 
-// Determine extension from original filename or MIME
-$origExt = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
-$ext     = in_array($origExt, SINGLE_ALLOWED_EXTS, true) ? $origExt : 'jpg';
+// Always re-encoded to JPEG by compressAndSaveImage() below, regardless of
+// the original format, to keep manually-added images small on disk.
+$ext = 'jpg';
 
 // Create subfolder
 $subDir = IMG_DIR . DIRECTORY_SEPARATOR . $techDwgNo;
@@ -95,7 +138,7 @@ while (file_exists($destPath)) {
     $destPath = $subDir . DIRECTORY_SEPARATOR . $filename;
 }
 
-if (!move_uploaded_file($f['tmp_name'], $destPath)) {
+if (!compressAndSaveImage($f['tmp_name'], $mime, $destPath)) {
     http_response_code(500);
     echo json_encode(['error' => 'Failed to save file']); exit;
 }

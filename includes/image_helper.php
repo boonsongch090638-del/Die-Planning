@@ -14,6 +14,73 @@ define('IMG_URL_BASE', BASE_URL . '/uploads/images');
 const IMG_EXTS     = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
 
 // ─────────────────────────────────────────────────────────────────
+// Section profile image — external API (sandboxalmdc)
+// ─────────────────────────────────────────────────────────────────
+
+const SECTION_PROFILE_API_BASE = 'http://sandboxalmdc.alumetgroup.com:8803/alm_profile/api';
+const SECTION_PROFILE_API_KEY  = '9mvgh5_9Egnqw0hReqflmMiHochHMxaCEzPZ-5ToSLA';
+
+/**
+ * Fetch a section's profile image URL from the external Section Profile API.
+ * Cached per-request so every die sharing a section only hits the API once.
+ */
+function getSectionProfileImageUrl(string $sectionCode): ?string {
+    static $cache = [];
+
+    $sectionCode = trim($sectionCode);
+    if ($sectionCode === '') return null;
+    if (array_key_exists($sectionCode, $cache)) return $cache[$sectionCode];
+
+    $url  = SECTION_PROFILE_API_BASE . '/sections/' . rawurlencode($sectionCode) . '/profile/';
+    $data = fetchSectionApiJson($url);
+
+    return $cache[$sectionCode] = $data['profile_image_url'] ?? null;
+}
+
+/**
+ * Minimal GET+JSON client for the Section Profile API (X-Api-Key auth).
+ * Returns null on any network/HTTP/JSON failure so a missing profile image
+ * is treated as "no image" rather than a hard error for the whole page.
+ */
+function fetchSectionApiJson(string $url): ?array {
+    $headers = ['Accept: application/json', 'X-Api-Key: ' . SECTION_PROFILE_API_KEY];
+
+    if (function_exists('curl_init')) {
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL            => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 10,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_SSL_VERIFYPEER => false,
+        ]);
+        $raw      = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($raw === false || $httpCode < 200 || $httpCode >= 300) return null;
+        $decoded = json_decode($raw, true);
+        return is_array($decoded) ? $decoded : null;
+    }
+
+    $ctx = stream_context_create([
+        'http' => [
+            'method'        => 'GET',
+            'header'        => implode("\r\n", $headers),
+            'timeout'       => 10,
+            'ignore_errors' => true,
+        ],
+        'ssl'  => ['verify_peer' => false],
+    ]);
+    $raw = @file_get_contents($url, false, $ctx);
+    if ($raw === false) return null;
+
+    $decoded = json_decode($raw, true);
+    return is_array($decoded) ? $decoded : null;
+}
+
+// ─────────────────────────────────────────────────────────────────
 // Per-request caches — built once, reused for every die in the loop
 // ─────────────────────────────────────────────────────────────────
 

@@ -11,8 +11,8 @@
  *   "data":  [ { ...die fields, die_no, die_pc_status, images[], image_path } ]
  * }
  *
- * Image lookup: scans uploads/images/ for filenames that begin with the
- * die's `no` field (e.g. "A80008" matches "A80008-001_1.jpg").
+ * Image lookup: Section Profile API by section code, falling back to a
+ * locally uploaded image (uploads/images/) when the API has none.
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -51,11 +51,22 @@ try {
         $die['die_no']        = trim($die['section'] ?? '') . '-' . trim($die['index_tab'] ?? '');
         $die['die_pc_status'] = !empty($die['die_pc_actual_date']) ? 'Finish' : 'Pending';
 
-        // Image lookup: subfolder first, then flat fallback by tech_dwg_no, then section prefix
-        $techDwgNo = trim($die['tech_dwg_no'] ?? '');
-        $section   = trim($die['section'] ?? '');
-        $die['images']     = findImageUrlsForDie($techDwgNo, $section);
-        $die['image_path'] = $die['images'][0] ?? null;
+        // Image lookup: Section Profile API first; fall back to a locally
+        // uploaded image when the API has none for this section.
+        $techDwgNo   = trim($die['tech_dwg_no'] ?? '');
+        $section     = trim($die['section'] ?? '');
+        $apiImageUrl = getSectionProfileImageUrl($section);
+
+        if ($apiImageUrl) {
+            $die['images']       = [$apiImageUrl];
+            $die['image_path']   = $apiImageUrl;
+            $die['image_source'] = 'api';
+        } else {
+            $localImages = findImageUrlsForDie($techDwgNo, $section);
+            $die['images']       = $localImages;
+            $die['image_path']   = $localImages[0] ?? null;
+            $die['image_source'] = $die['image_path'] ? 'local' : null;
+        }
     }
     unset($die);
 

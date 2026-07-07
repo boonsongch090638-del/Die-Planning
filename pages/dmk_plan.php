@@ -44,7 +44,11 @@ require_once '../includes/navbar.php';
 .thumb-wrap:hover { box-shadow: 0 0 0 2px #0d6efd; }
 .thumb-wrap img { width: 60px; height: 60px; object-fit: cover; }
 
-/* Empty / uploadable thumbnail */
+/* Empty thumbnail (no profile image from the Section API, read-only) */
+.thumb-empty { border: 1px dashed #ced4da !important; cursor: default; }
+.thumb-empty:hover { box-shadow: none; }
+
+/* Empty / uploadable thumbnail (manual fallback — only when API has no image) */
 .thumb-upload {
     border: 1px dashed #adb5bd !important;
     flex-direction: column;
@@ -232,7 +236,7 @@ tr.status-hold    td { background: #fdecea !important; }
     </div>
 </div>
 
-<!-- ── Quick upload input (hidden, for thumbnail click upload) ── -->
+<!-- ── Quick upload input (hidden, for manual fallback upload) ── -->
 <input type="file" id="quickUploadInput"
        accept="image/jpeg,image/png,image/gif,image/webp"
        style="display:none">
@@ -733,8 +737,18 @@ function pcBadge(v) {
 }
 
 // ── Thumbnail ──────────────────────────────────────────────────
+// image_source === 'api': image comes from the Section Profile API — read-only.
+// image_source === 'local' / null: no API image for this section — admin can
+// upload/delete a fallback image manually (stored locally, compressed server-side).
 function thumbCell(die, rowIdx) {
+    const canEdit = APP_IS_ADMIN && die.image_source !== 'api';
+
     if (!die.image_path) {
+        if (!canEdit) {
+            return `<td><div class="thumb-wrap thumb-empty" title="ไม่มีรูป">
+                <i class="bi bi-image" style="font-size:1.2rem;color:#ced4da"></i>
+            </div></td>`;
+        }
         return `<td>
             <div class="thumb-wrap thumb-upload"
                  data-die-id="${die.id}"
@@ -744,7 +758,15 @@ function thumbCell(die, rowIdx) {
             </div>
         </td>`;
     }
-    const delBtn = `<button class="btn-del-img" data-die-id="${die.id}" title="ลบรูป">&times;</button>`;
+
+    const onerror = canEdit
+        ? `(function(w){w.removeAttribute('data-row');w.className='thumb-wrap thumb-upload';w.title='คลิกเพื่ออัพโหลดรูป Section';w.innerHTML='<i class=\\'bi bi-image\\' style=\\'font-size:1.2rem;color:#ced4da\\'></i><span class=\\'upload-hint\\'><i class=\\'bi bi-cloud-upload me-1\\'></i>Upload</span>';})(this.parentElement)`
+        : `this.parentElement.className='thumb-wrap thumb-empty';this.parentElement.title='ไม่มีรูป';this.parentElement.innerHTML='<i class=\\'bi bi-image\\' style=\\'font-size:1.2rem;color:#ced4da\\'></i>'`;
+
+    const delBtn = canEdit
+        ? `<button class="btn-del-img" data-die-id="${die.id}" title="ลบรูป">&times;</button>`
+        : '';
+
     return `<td>
         <div class="thumb-cell-wrap">
             <div class="thumb-wrap" data-row="${rowIdx}" data-idx="0"
@@ -753,7 +775,7 @@ function thumbCell(die, rowIdx) {
                 <img src="${esc(die.image_path)}"
                      alt="${esc(die.section ?? '')}"
                      loading="lazy"
-                     onerror="(function(w){w.setAttribute('data-die-id',w.getAttribute('data-die-id'));w.removeAttribute('data-row');w.className='thumb-wrap thumb-upload';w.title='คลิกเพื่ออัพโหลดรูป Section';w.innerHTML='<i class=\\'bi bi-image\\' style=\\'font-size:1.2rem;color:#ced4da\\'></i><span class=\\'upload-hint\\'><i class=\\'bi bi-cloud-upload me-1\\'></i>Upload</span>';})(this.parentElement)">
+                     onerror="${onerror}">
             </div>
             ${delBtn}
         </div>
@@ -823,7 +845,9 @@ function renderTable(dies) {
     }).join('');
 }
 
-// ── Propagate images to rows sharing the same section (เบอร์แม่พิมพ์) ──
+// ── Propagate manually-uploaded fallback images to sibling rows sharing
+//    the same section (เบอร์แม่พิมพ์). Never touches API-sourced images —
+//    those already arrive identical for every die in the same section. ──
 function propagateSectionImages() {
     // Reset any previously shared flags
     for (const d of state.dies) {
@@ -833,24 +857,25 @@ function propagateSectionImages() {
             d._sharedImage = false;
         }
     }
-    // Build map: section → first die that owns a real image
+    // Build map: section → first die that owns a real local fallback image
     const map = {};
     for (const d of state.dies) {
-        if (d.image_path && !map[d.section]) {
+        if (d.image_source === 'local' && d.image_path && !map[d.section]) {
             map[d.section] = { image_path: d.image_path, images: d.images };
         }
     }
-    // Apply to rows that have no image but share a section
+    // Apply to rows that have no image (and aren't API-sourced) but share a section
     for (const d of state.dies) {
-        if (!d.image_path && map[d.section]) {
+        if (d.image_source !== 'api' && !d.image_path && map[d.section]) {
             d.image_path   = map[d.section].image_path;
             d.images       = map[d.section].images;
+            d.image_source = 'local';
             d._sharedImage = true;
         }
     }
 }
 
-// ── Delete image ───────────────────────────────────────────────
+// ── Delete image (manual fallback only) ─────────────────────────
 const DELETE_IMG_API = '<?= BASE_URL ?>/api/delete_die_image.php';
 
 async function deleteImage(dieId) {
@@ -860,7 +885,7 @@ async function deleteImage(dieId) {
     // If clicked die shows a shared image, resolve to the actual owner
     let ownerDie = clickedDie;
     if (clickedDie._sharedImage) {
-        ownerDie = state.dies.find(d => d.section === clickedDie.section && !d._sharedImage && d.image_path)
+        ownerDie = state.dies.find(d => d.section === clickedDie.section && d.image_source === 'local' && !d._sharedImage && d.image_path)
                    ?? clickedDie;
     }
 
@@ -873,6 +898,7 @@ async function deleteImage(dieId) {
         // Clear the owner die's images
         ownerDie.image_path   = null;
         ownerDie.images       = [];
+        ownerDie.image_source = null;
         ownerDie._sharedImage = false;
 
         propagateSectionImages();
@@ -1024,7 +1050,7 @@ document.getElementById('dmkTbody').addEventListener('click', e => {
     }
 });
 
-// ── Quick upload from thumbnail ────────────────────────────────
+// ── Quick upload from thumbnail (manual fallback) ───────────────
 document.getElementById('quickUploadInput').addEventListener('change', async function () {
     const file    = this.files[0];
     const dieId   = state.quickDieId;
@@ -1048,6 +1074,7 @@ document.getElementById('quickUploadInput').addEventListener('change', async fun
         if (dieIdx >= 0) {
             state.dies[dieIdx].image_path   = json.url;
             state.dies[dieIdx].images       = [json.url];
+            state.dies[dieIdx].image_source = 'local';
             state.dies[dieIdx]._sharedImage = false;
         }
         propagateSectionImages();
